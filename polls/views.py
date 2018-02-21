@@ -1,30 +1,28 @@
 from django.shortcuts import get_object_or_404, render
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseRedirect
 from django.urls import reverse
-from .models import Question
+from django.views import generic
 
-def index(request):
-	# latest_question_list = Question.objects.order_by('-pub_date')[:3]
-	# template = loader.get_template('polls/index.html')
-	# context = { 'latest_question_list': latest_question_list }
-	# return HttpResponse(template.render(context, request))
-	
-	# This is a shortcut ideom of above
-	latest_question_list = Question.objects.order_by('-pub_date')[:3]
-	context = { 'latest_question_list': latest_question_list }
-	return render(request, 'polls/index.html', context)
+from .models import Choice, Question
 
-def detail(request, question_id):
-	# try:
-	# 	question = Question.objects.get(pk=question_id)
-	# except:
-	# 	raise Http404("Question does not exist")
-	question = get_object_or_404(Question, pk=question_id)
-	return render(request, 'polls/detail.html', { 'question': question })
+class IndexView(generic.ListView):
+	# template_nameを指定しないと自動でapp name>/<model name>_detail.htmlになる
+	template_name = 'polls/index.html'
+	# これも自動ならquestion_listになる
+	context_object_name = 'latest_question_list'
 
-def results(request, question_id):
-    question = get_object_or_404(Question, pk=question_id)
-    return render(request, 'polls/results.html', {'question': question})
+	def get_queryset(self):
+		# return the last five published questions.
+		return Question.objects.order_by('-pub_date')[:]
+
+class DetailView(generic.DetailView):
+    model = Question
+    template_name = 'polls/detail.html'
+
+
+class ResultsView(generic.DetailView):
+    model = Question
+    template_name = 'polls/results.html'
 
 def vote(request, question_id):
     question = get_object_or_404(Question, pk=question_id)
